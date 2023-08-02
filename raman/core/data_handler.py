@@ -2,6 +2,7 @@ import polars as pl
 import numpy as np
 from scipy.signal import find_peaks, peak_prominences
 import matplotlib.pyplot as plt
+import pickle
 
 from ..despike import despike
 from ..baseline import baseline
@@ -13,6 +14,11 @@ def normalizer(vmin, vmax):
         return (x-vmin)/(vmax - vmin)
 
     return func
+
+
+def load_polarization_sweep(path):
+    with open(path, 'rb') as fh:
+        return pickle.load(fh)
 
 
 class PolarizationSweepData:
@@ -144,7 +150,7 @@ class PolarizationSweepData:
                 'black',
             ],
         )
-        plt.show()
+        return fig, axd
 
     def check_despike(self, offset_factor=0):
         fig, axd = self._waterfall_plot(
@@ -393,6 +399,10 @@ class PolarizationSweepData:
         else:
             self._baseline_df = baseline._baseline_df
         self._subtract_baseline()
+
+    def to_pickle(self, path):
+        with open(path, 'wb') as fh:
+            pickle.dump(self, fh)
 
 
 class _Baseline:
