@@ -44,3 +44,6 @@ psweeps[30].subtract_baseline(1e3, 0.01, 100, exclude=[(63.6, 120), (175, 500)],
 psweeps[30].check_baseline(OFFSET_FACTOR)
 psweeps[180].subtract_baseline(1e3, 0.01, 100, exclude=[(63.6, 120), (175, 500)], interactive=False)
 psweeps[180].check_baseline(OFFSET_FACTOR)
+
+psweeps[30].waterfall(OFFSET_FACTOR)
+psweeps[180].waterfall(OFFSET_FACTOR)

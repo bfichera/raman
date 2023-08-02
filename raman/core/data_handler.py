@@ -131,6 +131,21 @@ class PolarizationSweepData:
         fig.legend()
         return fig, axd
 
+    def waterfall(self, offset_factor=0):
+        fig, axd = self._waterfall_plot(
+            [
+                self._df,
+            ],
+            offset_factor=offset_factor,
+            labels=[
+                None,
+            ],
+            colors=[
+                'black',
+            ],
+        )
+        plt.show()
+
     def check_despike(self, offset_factor=0):
         fig, axd = self._waterfall_plot(
             [
