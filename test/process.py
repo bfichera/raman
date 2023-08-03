@@ -21,7 +21,7 @@ for d in [DATA_DIR_30K, DATA_DIR_180K]:
         if channel == 'XX':
             a_angles.append(0)
         else:
-            a_angles.append(45)
+            a_angles.append(90)
 
     back_paths = [BACKGROUND_XX_PATH, BACKGROUND_XY_PATH]
     back_a_angles = [0, 45]

@@ -68,4 +68,3 @@ class _ModeData:
             plt.plot(self.pdata_of(a), self.ydata_of(a), label='$a='+str(a)+r'^\circ$')
         plt.legend()
         plt.show()
-            
