@@ -1,11 +1,24 @@
+import numpy as np
 import sympy as sp
+
+
+def _full_expand(expr):
+    while expr != expr.expand():
+        expr = expr.expand()
+    return expr
+
+def sympify(a):
+    r = a.copy().flatten()
+    for i in range(len(r)):
+        r[i] = sp.sympify(r[i])
+    return r.reshape(a.shape)
 
 
 class RamanTensor:
 
     def __init__(self, tensor):
-        self.tensor = tensor.copy()
-        self._original_tensor = tensor.copy()
+        self.tensor = sympify(tensor.copy())
+        self._original_tensor = self.tensor.copy()
 
     def copy(self):
         return RamanTensor(self.tensor)
@@ -58,6 +71,18 @@ class RamanTensor:
             v_final=None,
         )
 
-    def get_model(self):
+    def get_model_func(self):
 
-        Ein = np.array([sp.Symbol
+        p = sp.Symbol('p_angle')
+        a = sp.Symbol('a_angle')
+        expr = self.get_model_expr()
+        args = [p, a] + list(sorted(self.free_symbols, key=str))
+        return sp.lambdify(args, expr, modules='numpy')
+
+    def get_model_expr(self):
+
+        p = sp.Symbol('p_angle')
+        a = sp.Symbol('a_angle')
+        Ein = np.array([sp.cos(p/180*sp.pi), sp.sin(p/180*sp.pi), 0])
+        Eout = np.array([sp.cos(a/180*sp.pi), sp.sin(a/180*sp.pi), 0])
+        return _full_expand((Eout @ self.tensor @ Ein)**2)

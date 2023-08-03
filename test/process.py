@@ -13,21 +13,21 @@ psweeps = {}
 for d in [DATA_DIR_30K, DATA_DIR_180K]:
     paths = []
     p_angles = []
-    a_angles = []
+    a_diff_angles = []
     for path in sorted(d.glob('*')):
         tempstr, channel, p = re.search(r'_([0-9]*)K_.*(XX|XY)_([0-9]*)deg', path.name).groups()
         paths.append(path)
         p_angles.append(float(p))
         if channel == 'XX':
-            a_angles.append(0)
+            a_diff_angles.append(0)
         else:
-            a_angles.append(90)
+            a_diff_angles.append(90)
 
     back_paths = [BACKGROUND_XX_PATH, BACKGROUND_XY_PATH]
-    back_a_angles = [0, 45]
+    back_a_diff_angles = [0, 90]
 
-    psweep = raman.PolarizationSweepData(p_angles, a_angles, paths)
-    psweep.subtract_background(back_paths, back_a_angles, 60)
+    psweep = raman.PolarizationSweepData(p_angles, a_diff_angles, paths)
+    psweep.subtract_background(back_paths, back_a_diff_angles, 60)
     psweep.check_background(OFFSET_FACTOR)
     psweep.despike(
         ignore=[

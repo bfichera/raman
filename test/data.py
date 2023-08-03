@@ -9,7 +9,3 @@ psweeps[30] = load_polarization_sweep(Path.cwd() / 'pkl' / 'data_30K.pkl')
 psweeps[180] = load_polarization_sweep(Path.cwd() / 'pkl' / 'data_180K.pkl')
 psweeps[30].waterfall(40)
 plt.show()
-
-mode = psweeps[30].get_mode(100, 90, 110)
-mode.plot()
-
