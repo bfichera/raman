@@ -48,5 +48,6 @@ psweeps[180].check_baseline(OFFSET_FACTOR)
 fig, axd = psweeps[30].waterfall(OFFSET_FACTOR)
 fig, axd = psweeps[180].waterfall(OFFSET_FACTOR)
 
-psweeps[30].to_pickle(Path.cwd() / 'data_30K.pkl')
-psweeps[180].to_pickle(Path.cwd() / 'data_180K.pkl')
+Path.mkdir(Path.cwd() / 'pkl', exist_ok=True)
+psweeps[30].to_pickle(Path.cwd() / 'pkl' / 'data_30K.pkl')
+psweeps[180].to_pickle(Path.cwd() / 'pkl' / 'data_180K.pkl')

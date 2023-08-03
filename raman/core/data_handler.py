@@ -6,6 +6,7 @@ import pickle
 
 from ..despike import despike
 from ..baseline import baseline
+from ..mode import Mode, _ModeData
 
 
 def normalizer(vmin, vmax):
@@ -134,7 +135,8 @@ class PolarizationSweepData:
             axd[a].set_xlabel(r'$\nu$ (cm${}^{-1}$)')
             axd[a].set_ylabel(r'counts $\cdot$ s${}^{-1}$')
             axd[a].set_title('$a = '+str(a)+r'^\circ$')
-        fig.legend()
+        if not all([h is None for h in labels]):
+            fig.legend()
         return fig, axd
 
     def waterfall(self, offset_factor=0):
@@ -312,19 +314,21 @@ class PolarizationSweepData:
             )
         normalized_back_q = pl.concat(normalized_back_qs, how='vertical')
         self._normalized_back_df = normalized_back_q.collect()
-        self._back_sub_df = self._raw_df \
-            .lazy() \
-            .join(
-                normalized_back_q,
-                on=['WAVENUMBER', 'A_ANGLE'],
-                how='outer',
-                suffix='_background',
-            ).select(
-                pl.col('WAVENUMBER'),
-                pl.col('P_ANGLE'),
-                pl.col('A_ANGLE'),
-                pl.col('COUNTS/SEC') - pl.col('COUNTS/SEC_background')
-            ).collect()
+        self._back_sub_df = (
+            self._raw_df
+                .lazy()
+                .join(
+                    normalized_back_q,
+                    on=['WAVENUMBER', 'A_ANGLE'],
+                    how='outer',
+                    suffix='_background',
+                ).select(
+                    pl.col('WAVENUMBER'),
+                    pl.col('P_ANGLE'),
+                    pl.col('A_ANGLE'),
+                    pl.col('COUNTS/SEC') - pl.col('COUNTS/SEC_background')
+                ).collect()
+        )
 
     def subtract_background(
         self,
@@ -403,6 +407,28 @@ class PolarizationSweepData:
     def to_pickle(self, path):
         with open(path, 'wb') as fh:
             pickle.dump(self, fh)
+
+    def get_mode(self, center_frequency, left_bound, right_bound):
+        pdatas = []
+        ydatas = []
+        for a in self.a_angles:
+            df = self._df.filter(
+                (pl.col('A_ANGLE') == a)
+                & (pl.col('WAVENUMBER') >= left_bound)
+                & (pl.col('WAVENUMBER') < right_bound)
+            ).pivot(
+                index='P_ANGLE',
+                columns='WAVENUMBER',
+                values='COUNTS/SEC',
+            ).select(
+                pl.col('P_ANGLE'),
+                pl.sum_horizontal(pl.col('*').exclude('P_ANGLE')),
+            ).sort(by='P_ANGLE')
+            pdatas.append(np.array(df.select(pl.col('P_ANGLE')).to_series()))
+            ydatas.append(np.array(df.select(pl.col('sum')).to_series()))
+        modedata = _ModeData(pdatas, ydatas, self.a_angles)
+        return Mode(center_frequency, left_bound, right_bound, modedata)
+        
 
 
 class _Baseline:
