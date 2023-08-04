@@ -119,15 +119,17 @@ class RamanTensor:
     def get_model_func(self):
         p = sp.Symbol('p_angle')
         a = sp.Symbol('a_angle')
+        shift = sp.Symbol('shift')
         expr = self.get_model_expr()
-        args = [p, a] + list(sorted(self.free_symbols, key=str))
+        args = [p, a, shift] + list(sorted(self.free_symbols, key=str))
         return sp.lambdify(args, expr, modules='numpy')
 
     def get_model_expr(self):
         p = sp.Symbol('p_angle')
         a = sp.Symbol('a_angle')
-        Ein = np.array([sp.cos(p/180*sp.pi), sp.sin(p/180*sp.pi), 0])
-        Eout = np.array([sp.cos(a/180*sp.pi), sp.sin(a/180*sp.pi), 0])
+        shift = sp.Symbol('shift')
+        Ein = np.array([sp.cos((p+shift)/180*sp.pi), sp.sin((p+shift)/180*sp.pi), 0])
+        Eout = np.array([sp.cos((a+shift)/180*sp.pi), sp.sin((a+shift)/180*sp.pi), 0])
         return _full_expand(
             (Eout @ self.tensor_real @ Ein)**2
             + (Eout @ self.tensor_imag @ Ein)**2,

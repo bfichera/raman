@@ -55,16 +55,7 @@ models, result = minimize_single(
     [ramantensor],
     [modedata],
     shift=None,
-    bound=10,
-    method='dual_annealing',
-    no_local_search=True,
-)
-models, result = minimize_single(
-    [ramantensor],
-    [modedata],
-    params=result.params,
-    shift=None,
-    method='powell',
+    method='leastsq',
 )
 print(lmfit.fit_report(result))
 check_single(models, [modedata], result.params)

@@ -28,19 +28,21 @@ def minimize_single(ramantensors, modedatas, params=None, shift=None,
         params.add('shift', value=0, min=-180, max=180)
     else:
         params.add('shift', value=shift, min=-180, max=180, vary=False)
+    for name in params:
+        if 'shift' in name and name != 'shift':
+            params[name].set(expr='shift')
 
     if submitted_params is not None:
         params = submitted_params.copy()
 
     def resid(params):
-        shift = params['shift'].value
         result = np.array(
             [
                 (
                     m.eval(
                         params,
-                        p_angle=d.flattened_pdata-shift,
-                        a_angle=d.flattened_adata-shift,
+                        p_angle=d.flattened_pdata,
+                        a_angle=d.flattened_adata,
                     )
                     - d.flattened_ydata
                 )
