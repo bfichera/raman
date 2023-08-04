@@ -1,7 +1,6 @@
 import numpy as np
 import lmfit
 import matplotlib.pyplot as plt
-from lmfit_slider import slider
 
 from .model import ModeModel
 
@@ -29,22 +28,6 @@ def minimize_single(ramantensors, modedatas, shift=None,
         params.add('rel_scale', value=1, min=0, max=np.inf)
     else:
         params.add('rel_scale', value=rel_scale, min=0, max=np.inf, vary=False)
-
-
-#     def fcn(params, p_angle, a_angle):
-#         shift = params['shift'].value
-#         return m.eval(params, p_angle=p_angle+shift, a_angle=a_angle+shift)
-#
-#     model_p = np.linspace(0, 360, 5000)
-#     new_params = slider(
-#         fcn,
-#         params,
-#         data_x=modedatas[0].pdata_of(1),
-#         data=modedatas[0].ydata_of(1),
-#         args=(model_p, model_p),
-#     )
-#     new_params.pretty_print()
-#     exit()
 
     def resid(params):
         shift = params['shift'].value
@@ -88,7 +71,6 @@ def check_single(models, modedatas, params):
             )
     plt.legend()
     plt.show()
-
 
 
 
