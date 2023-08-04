@@ -10,7 +10,7 @@ def _full_expand(expr):
 
 
 def sympify(a):
-    r = a.copy().flatten()
+    r = a.copy().flatten().astype(object)
     for i in range(len(r)):
         r[i] = sp.sympify(r[i])
     return r.reshape(a.shape)
@@ -18,10 +18,11 @@ def sympify(a):
 
 def assert_real_symbols(a):
     for ai in a.flatten():
-        if 'real' not in ai.assumptions0:
-            raise TypeError('All symbols need to be real.')
-        if ai.assumptions0['real'] is not True:
-            raise TypeError('All symbols need to be real.')
+        for fs in ai.free_symbols:
+            if 'real' not in fs.assumptions0:
+                raise TypeError('All symbols need to be real.')
+            if fs.assumptions0['real'] is not True:
+                raise TypeError('All symbols need to be real.')
 
 
 def _make_symbol_real(s, suffix):
@@ -50,10 +51,10 @@ def real_and_imag(a):
 class RamanTensor:
 
     def __init__(self, tensor_real, tensor_imag):
-        assert_real_symbols(tensor_real)
-        assert_real_symbols(tensor_imag)
         self.tensor_real = sympify(tensor_real.copy())
         self.tensor_imag = sympify(tensor_imag.copy())
+        assert_real_symbols(self.tensor_real)
+        assert_real_symbols(self.tensor_imag)
         self._original_tensor_real = self.tensor_real.copy()
         self._original_tensor_imag = self.tensor_imag.copy()
 
@@ -110,9 +111,9 @@ class RamanTensor:
 
     def rotate(self, orientation_matrix=None, v_initial=None, v_final=None):
         return self._rotate_dispatcher(
-            orientation_matrix=None,
-            v_initial=None,
-            v_final=None,
+            orientation_matrix=orientation_matrix,
+            v_initial=v_initial,
+            v_final=v_final,
         )
 
     def get_model_func(self):

@@ -6,7 +6,7 @@ from lmfit.models import update_param_vals
 
 class ModeModel(Model):
 
-    def __init__(self, ramantensor, a_diff_angles=[], independent_vars=['p_angle', 'a_angle'],
+    def __init__(self, ramantensor, a_diff_angles, independent_vars=['p_angle', 'a_angle'],
                  prefix='', nan_policy='raise', **kwargs):
         kwargs.update(
             {
@@ -17,8 +17,25 @@ class ModeModel(Model):
         )
         model_func = ramantensor.get_model_func()
         arg_names = [p.name for p in inspect.signature(model_func).parameters.values()]
-        background_names = ['back_{a_}' for a_ in a_diff_angles]
-        super().__init__(model_func, **kwargs)
+        scale_names = [f'scale_{a_}' for a_ in a_diff_angles]
+        code = (
+            'def func('+', '.join(arg_names)+', '+', '.join(scale_names)+'):\n'
+            '    scaledict = {'+', '.join([f'{a_}: scale_{a_}' for a_ in a_diff_angles])+'}\n'
+            '    scales = np.array(\n'
+            '        [\n'
+            '            scaledict[a_]\n'
+            '            for a_ in np.round(a_angle-p_angle).astype(int)\n'
+            '        ]\n'
+            '    )\n'
+            '    return scales*model_func('+', '.join(arg_names)+')\n'
+        )
+        cdict = {}
+        glb = {'model_func': model_func}
+        glb.update(globals())
+        exec(code, glb, cdict)
+        func = cdict['func']
+        
+        super().__init__(func, **kwargs)
         self._set_paramhints_prefix()
 
     def guess(self, modedata, **kwargs): 

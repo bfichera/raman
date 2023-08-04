@@ -5,15 +5,19 @@ import matplotlib.pyplot as plt
 from .model import ModeModel
 
 
-def minimize_single(ramantensors, modedatas, shift=None,
-                    rel_scale=None, bound=None, **kwargs):
+def minimize_single(ramantensors, modedatas, params=None, shift=None,
+                    bound=None, **kwargs):
 
     models = []
     prefixes = []
+    if params is not None:
+        submitted_params = params.copy()
+    else:
+        submitted_params = None
     params = lmfit.Parameters()
     for i, (ramantensor, modedata) in enumerate(zip(ramantensors, modedatas)):
         prefixes.append(f't{int(modedata.center_frequency)}_')
-        m = ModeModel(ramantensor, prefix=prefixes[i])
+        m = ModeModel(ramantensor, prefix=prefixes[i], a_diff_angles=modedata.a_diff_angles)
         pars = m.guess(modedata)
         if bound is not None:
             for name in pars:
@@ -24,10 +28,9 @@ def minimize_single(ramantensors, modedatas, shift=None,
         params.add('shift', value=0, min=-180, max=180)
     else:
         params.add('shift', value=shift, min=-180, max=180, vary=False)
-    if rel_scale is None:
-        params.add('rel_scale', value=1, min=0, max=np.inf)
-    else:
-        params.add('rel_scale', value=rel_scale, min=0, max=np.inf, vary=False)
+
+    if submitted_params is not None:
+        params = submitted_params.copy()
 
     def resid(params):
         shift = params['shift'].value

@@ -31,8 +31,8 @@ class PolarizationSweepData:
         a_diff_angles,
         paths,
     ):
-        p_angles = p_angles.astype(int)
-        a_diff_angles = a_diff_angles.astype(int)
+        p_angles = np.round(p_angles).astype(int)
+        a_diff_angles = np.round(a_diff_angles).astype(int)
         self.p_angles = np.unique(p_angles)
         self.a_diff_angles = np.unique(a_diff_angles)
         self._all_p_angles = p_angles
@@ -264,7 +264,7 @@ class PolarizationSweepData:
                     pl.col('WAVENUMBER'),
                 )
                 for a, back_path in zip(
-                    background_a_diff_angles.astype(int),
+                    np.round(background_a_diff_angles).astype(int),
                     background_paths,
                 )
             ],

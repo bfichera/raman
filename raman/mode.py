@@ -39,7 +39,7 @@ class ModeData:
 class _ModeData:
 
     def __init__(self, pdatas, adatas, ydatas):
-        self.a_diff_angles = np.unique(adatas - pdatas)
+        self.a_diff_angles = np.unique(adatas - pdatas).astype(int)
         self.df = pl.concat(
             [
                 pl.LazyFrame(

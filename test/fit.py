@@ -40,15 +40,30 @@ t_real, t_imag = real_and_imag(t)
 ramantensor = RamanTensor(
     t_real,
     t_imag,
+#     np.zeros(t_real.shape).astype(int),
 )
-model = ModeModel(ramantensor)
-params = model.guess(modedata)
+orientation_matrix = np.array(
+    [
+        [+0.623332, +0.359881, -0.694222],
+        [-0.781958, +0.286876, -0.553394],
+        [+0.000000, +0.887799, +0.460230],
+    ]
+)
+# ramantensor.rotate(orientation_matrix=orientation_matrix)
 
 models, result = minimize_single(
     [ramantensor],
     [modedata],
     shift=None,
-    bound=1,
+    bound=10,
+    method='dual_annealing',
+    no_local_search=True,
+)
+models, result = minimize_single(
+    [ramantensor],
+    [modedata],
+    params=result.params,
+    shift=None,
     method='powell',
 )
 print(lmfit.fit_report(result))
