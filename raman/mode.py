@@ -39,29 +39,7 @@ class ModeData:
 class _ModeData:
 
     def __init__(self, pdatas, adatas, ydatas):
-        pdatas = []
-        adatas = []
-        ydatas = []
-        p_angles = np.arange(0, 360, 10)
-        for a_ in [0, 90]:
-            pdata = p_angles
-            adata = p_angles + a_
-            sin = np.sin
-            cos = np.cos
-            a = 3.21
-            d = 1.45
-            a_angle = adata
-            p_angle = pdata
-            pi = np.pi
-            ydata = 2*a**2*sin(pi*a_angle/180)**2*sin(pi*p_angle/180)**2 - a**2*sin(pi*a_angle/180)**2 + a**2*sin(pi*a_angle/90)*sin(pi*p_angle/90)/2 - a**2*sin(pi*p_angle/180)**2 + a**2 + 2*a*d*sin(pi*a_angle/180)*cos(pi*a_angle/180) + 2*a*d*sin(pi*p_angle/180)*cos(pi*p_angle/180) - 2*d**2*sin(pi*a_angle/180)**2*sin(pi*p_angle/180)**2 + d**2*sin(pi*a_angle/180)**2 + d**2*sin(pi*a_angle/90)*sin(pi*p_angle/90)/2 + d**2*sin(pi*p_angle/180)**2
-            pdatas.append(pdata)
-            adatas.append(adata)
-            ydatas.append(ydata)
-        pdatas = np.array(pdatas)
-        adatas = np.array(adatas)
-        ydatas = np.array(ydatas)
         self.a_diff_angles = np.unique(adatas - pdatas)
-
         self.df = pl.concat(
             [
                 pl.LazyFrame(

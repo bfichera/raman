@@ -447,6 +447,7 @@ class PolarizationSweepData:
             pdata = np.array(df.select(pl.col('P_ANGLE')).to_series())
             adata = pdata + a
             ydata = np.array(df.select(pl.col('sum')).to_series())
+            ydata /= len(ydata)
             pdatas.append(pdata)
             adatas.append(adata)
             ydatas.append(ydata)

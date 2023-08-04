@@ -12,15 +12,22 @@ modedata.plot()
 
 t = np.array(
     [
-        [a, d, 0],
-        [d, a, 0],
-        [0, 0, c],
+        [a, d, e],
+        [d, a, f],
+        [e, f, c],
     ],
 )
 ramantensor = RamanTensor(t)
 model = ModeModel(ramantensor)
 params = model.guess(modedata)
 
-models, result = minimize_single([ramantensor], [modedata], shift=None, method='leastsq')
+models, result = minimize_single(
+    [ramantensor],
+    [modedata],
+    shift=None,
+    method='dual_annealing',
+    bound=10,
+    no_local_search=True,
+)
 print(lmfit.fit_report(result))
 check_single(models, [modedata], result.params)
