@@ -8,16 +8,16 @@ from sympy.abc import a, b, c, d, e, f
 
 psweeps[30].pcolor()
 
-# modedata = psweeps[30].get_modedata(
-#     57.4,
-#     55.749,
-#     58.623,
-# )
 modedata = psweeps[30].get_modedata(
-    464.93,
-    450.00,
-    476.45,
+    57.4,
+    55.749,
+    58.623,
 )
+# modedata = psweeps[30].get_modedata(
+#     464.93,
+#     450.00,
+#     476.45,
+# )
 # modedata = psweeps[30].get_modedata(
 #     78.1,
 #     76.1,
