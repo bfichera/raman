@@ -1,6 +1,6 @@
 import polars as pl
 import numpy as np
-from scipy.signal import find_peaks, peak_prominences
+from scipy.signal import find_peaks, peak_prominences, medfilt
 import matplotlib.pyplot as plt
 import pickle
 
@@ -155,6 +155,40 @@ class PolarizationSweepData:
             ],
         )
         return fig, axd
+
+    def pcolor(self):
+        fig, axd = plt.subplot_mosaic([self.a_diff_angles], sharex=True, sharey=True)
+        for a in self.a_diff_angles:
+            ydatas = []
+            ax = axd[a]
+            all_maxes = []
+            for i, p in enumerate(self.p_angles):
+                filt = (
+                    (pl.col('P_ANGLE') == p)
+                    & (pl.col('A_DIFF_ANGLE') == a)
+                )
+                ydata = self._ydata_of(self._df, filt)
+                all_maxes.append(max(medfilt(ydata, 11)))
+                ydatas.append(ydata)
+            ydatas = np.array(ydatas)
+            X, Y = np.meshgrid(self.p_angles, self.xdata)
+            c = ax.pcolor(
+                X,
+                Y,
+                ydatas.transpose(),
+                vmin=0,
+                vmax=max(all_maxes),
+                cmap='magma',
+                shading='nearest',
+            )
+            fig.colorbar(c, ax=ax)
+            ax.set_title(r'$a='+str(a)+r'^\circ$')
+            ax.set_xlabel(r'$\theta~({}^\circ)$')
+            ax.set_ylabel(r'$\nu~(\mathrm{cm}^{-1})$')
+        plt.show()
+            
+        
+        
 
     def check_despike(self, offset_factor=0):
         fig, axd = self._waterfall_plot(

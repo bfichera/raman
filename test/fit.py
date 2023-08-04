@@ -6,24 +6,26 @@ from raman.minimize import minimize_single, check_single
 import numpy as np
 from sympy.abc import a, b, c, d, e, f
 
-modedata = psweeps[30].get_modedata(
-    57.4,
-    55.749,
-    58.623,
-)
+psweeps[30].pcolor()
+
 # modedata = psweeps[30].get_modedata(
-#     464.93,
-#     450.00,
-#     476.45,
+#     57.4,
+#     55.749,
+#     58.623,
 # )
+modedata = psweeps[30].get_modedata(
+    464.93,
+    450.00,
+    476.45,
+)
 # modedata = psweeps[30].get_modedata(
 #     78.1,
 #     76.1,
 #     80.1,
 # )
 # modedata = psweeps[30].get_modedata(
-#     92.8,
-#     90.8,
+#     93.2,
+#     91.7,
 #     94.8,
 # )
 
