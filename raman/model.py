@@ -1,10 +1,12 @@
+import inspect
+
 import numpy as np
 from lmfit.model import Model
 from lmfit.models import update_param_vals
 
 class ModeModel(Model):
 
-    def __init__(self, ramantensor, independent_vars=['p_angle', 'a_angle'],
+    def __init__(self, ramantensor, a_diff_angles=[], independent_vars=['p_angle', 'a_angle'],
                  prefix='', nan_policy='raise', **kwargs):
         kwargs.update(
             {
@@ -14,6 +16,8 @@ class ModeModel(Model):
             },
         )
         model_func = ramantensor.get_model_func()
+        arg_names = [p.name for p in inspect.signature(model_func).parameters.values()]
+        background_names = ['back_{a_}' for a_ in a_diff_angles]
         super().__init__(model_func, **kwargs)
         self._set_paramhints_prefix()
 
