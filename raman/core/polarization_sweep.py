@@ -10,6 +10,8 @@ from ..mode import ModeData, _ModeData
 
 
 def normalizer(vmin, vmax):
+    if vmin == vmax:
+        return lambda x: 0
 
     def func(x):
         return (x-vmin)/(vmax - vmin)
@@ -37,12 +39,18 @@ class PolarizationSweepData:
         self.a_diff_angles = np.unique(a_diff_angles)
         self._all_p_angles = p_angles
         self._all_a_diff_angles = a_diff_angles
+        self._background_subtracted = False
+        self._baseline_subtracted = False
+        self._despiked = False
+
         self._back_df = None
         self._normalized_back_df = None
-        self._back_sub_df = None
-        self._despiked_df = None
         self._baseline_df = None
-        self._base_sub_df = None
+
+        self._despiked_df_stored = None
+        self._base_sub_df_stored = None
+        self._back_sub_df_stored = None
+
         self._raw_df = pl.concat(
             [
                 pl.scan_csv(
@@ -72,6 +80,39 @@ class PolarizationSweepData:
         if self._back_sub_df is not None:
             return self._back_sub_df
         return self._raw_df
+
+    @property
+    def background_subtracted(self):
+        return self._back_sub_df_stored is not None
+
+    @property
+    def despiked(self):
+        return self._despiked_df_stored is not None
+
+    @property
+    def baseline_subtracted(self):
+        return self._base_sub_df_stored is not None
+
+    @property
+    def _back_sub_df(self):
+        if self.background_subtracted:
+            return self._back_sub_df_stored
+        else:
+            return self._raw_df
+
+    @property
+    def _despiked_df(self):
+        if self.despiked:
+            return self._despiked_df_stored
+        else:
+            return self._back_sub_df
+
+    @property
+    def _base_sub_df(self):
+        if self.baseline_subtracted:
+            return self._base_sub_df_stored
+        else:
+            return self._despiked_df
 
     @property
     def xdata(self):
@@ -156,8 +197,12 @@ class PolarizationSweepData:
         )
         return fig, axd
 
-    def pcolor(self):
-        fig, axd = plt.subplot_mosaic([self.a_diff_angles], sharex=True, sharey=True)
+    def pcolor(self, log=False):
+        fig, axd = plt.subplot_mosaic(
+            [self.a_diff_angles],
+            sharex=True,
+            sharey=True,
+        )
         for a in self.a_diff_angles:
             ydatas = []
             ax = axd[a]
@@ -168,8 +213,14 @@ class PolarizationSweepData:
                     & (pl.col('A_DIFF_ANGLE') == a)
                 )
                 ydata = self._ydata_of(self._df, filt)
-                all_maxes.append(max(medfilt(ydata, 11)))
-                ydatas.append(ydata)
+                if not log:
+                    all_maxes.append(max(medfilt(ydata, 11)))
+                else:
+                    all_maxes.append(max(np.log(medfilt(ydata, 11))))
+                if not log:
+                    ydatas.append(ydata)
+                else:
+                    ydatas.append(np.log(ydata))
             ydatas = np.array(ydatas)
             X, Y = np.meshgrid(self.p_angles, self.xdata)
             c = ax.pcolor(
@@ -181,14 +232,15 @@ class PolarizationSweepData:
                 cmap='magma',
                 shading='nearest',
             )
-            fig.colorbar(c, ax=ax)
+            if not log:
+                barlabel = r'counts $\cdot$ s${}^{-1}$'
+            else:
+                barlabel = r'$log$ counts $\cdot$ s${}^{-1}$'
+            fig.colorbar(c, ax=ax, label=barlabel)
             ax.set_title(r'$a='+str(a)+r'^\circ$')
             ax.set_xlabel(r'$\theta~({}^\circ)$')
             ax.set_ylabel(r'$\nu~(\mathrm{cm}^{-1})$')
         plt.show()
-            
-        
-        
 
     def check_despike(self, offset_factor=0):
         fig, axd = self._waterfall_plot(
@@ -255,7 +307,7 @@ class PolarizationSweepData:
 
     def despike(self, ignore=[], threshold=12):
 
-        self._despiked_df = pl.concat(
+        self._despiked_df_stored = pl.concat(
             [
                 pl.LazyFrame(
                     {
@@ -353,7 +405,7 @@ class PolarizationSweepData:
             )
         normalized_back_q = pl.concat(normalized_back_qs, how='vertical')
         self._normalized_back_df = normalized_back_q.collect()
-        self._back_sub_df = (
+        self._back_sub_df_stored = (
             self._raw_df
                 .lazy()
                 .join(
@@ -417,7 +469,7 @@ class PolarizationSweepData:
         ).collect()
 
     def _subtract_baseline(self):
-        self._base_sub_df = self._df \
+        self._base_sub_df_stored = self._df \
             .lazy() \
             .join(
                 self._baseline_df.lazy(),

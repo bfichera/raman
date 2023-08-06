@@ -43,8 +43,15 @@ class TemperatureSweepData:
             p_angles_ = []
             a_diff_angles_ = []
             paths_ = []
-            for t_, p, a, path in enumerate(
-                zip(temperatures, p_angles, a_diff_angles, paths),
+#             print(temperatures)
+#             print(p_angles)
+#             print(a_diff_angles)
+#             print(paths)
+            for t_, p, a, path in zip(
+                temperatures,
+                p_angles,
+                a_diff_angles,
+                paths,
             ):
                 if t_ == t:
                     p_angles_.append(p)
@@ -56,6 +63,16 @@ class TemperatureSweepData:
                 paths_,
             )
         self._temperatures = np.unique(temperatures)
+
+    @property
+    def p_angles(self):
+        all_p_angles = [p[0] for p in self._pols]
+        return np.unique(all_p_angles)
+
+    @property
+    def a_diff_angles(self):
+        all_a_diff_angles = [p[1] for p in self._pols]
+        return np.unique(all_a_diff_angles)
 
     @property
     def _df(self):
@@ -71,7 +88,6 @@ class TemperatureSweepData:
     @property
     def xdata(self):
         return self._xdata_of(
-            self._df,
             (pl.col('P_ANGLE') == self.p_angles[0])
             & (pl.col('A_DIFF_ANGLE') == self.a_diff_angles[0])
             & (pl.col('TEMPERATURE') == self._temperatures[0]),
@@ -97,12 +113,13 @@ class TemperatureSweepData:
         if cmap is None:
             cmap = lambda x: colormaps['magma'](x*0.7)
         fig, axd = plt.subplot_mosaic(
-            [self._pols],
+            [[str(p)+str(a) for p, a in self._pols]],
             sharex=True,
             sharey=True,
         )
-        for pi, pol in self._pols:
+        for pi, pol in enumerate(self._pols):
             p, a = pol
+            code = str(p)+str(a)
             for t in self._temperatures:
                 xdata = self.xdata
                 filt = (
@@ -118,16 +135,17 @@ class TemperatureSweepData:
                     max(self._temperatures),
                 )(t)
                 offset = norm_t * offset_factor
-                axd[pol].plot(xdata, ydata+offset, color=cmap(norm_t))
-                axd[pol].text(
+                axd[code].plot(xdata, ydata+offset, color=cmap(norm_t))
+                axd[code].text(
                     xdata[-1],
                     (ydata+offset)[-1],
                     f'{int(t)} K',
                 )
         for pol in self._pols:
-            axd[pol].set_xlabel(r'$\nu$ (cm${}^{-1}$)')
-            axd[pol].set_ylabel(r'counts $\cdot$ s${}^{-1}$')
-            axd[pol].set_title(
+            code = str(p)+str(a)
+            axd[code].set_xlabel(r'$\nu$ (cm${}^{-1}$)')
+            axd[code].set_ylabel(r'counts $\cdot$ s${}^{-1}$')
+            axd[code].set_title(
                 '$p = '+str(p)+r'^\circ$, $a = '+str(a)+r'^\circ$',
             )
         return fig, axd
@@ -136,16 +154,17 @@ class TemperatureSweepData:
         fig, axd = self._waterfall_plot(offset_factor, cmap=cmap)
         return fig, axd
 
-    def pcolor(self):
+    def pcolor(self, log=False):
         fig, axd = plt.subplot_mosaic(
-            [self._pols],
+            [[str(p)+str(a) for p, a in self._pols]],
             sharex=True,
             sharey=True,
         )
-        for pol in self.pols:
+        for pol in self._pols:
             p, a = pol
+            code = str(p)+str(a)
             ydatas = []
-            ax = axd[pol]
+            ax = axd[code]
             all_maxes = []
             for t in self._temperatures:
                 filt = (
@@ -154,8 +173,14 @@ class TemperatureSweepData:
                     & (pl.col('A_DIFF_ANGLE') == a)
                 )
                 ydata = self._ydata_of(filt)
-                all_maxes.append(max(medfilt(ydata, 11)))
-                ydatas.append(ydata)
+                if not log:
+                    all_maxes.append(max(medfilt(ydata, 11)))
+                else:
+                    all_maxes.append(max(np.log(medfilt(ydata, 11))))
+                if not log:
+                    ydatas.append(ydata)
+                else:
+                    ydatas.append(np.log(ydata))
             ydatas = np.array(ydatas)
             X, Y = np.meshgrid(self._temperatures, self.xdata)
             c = ax.pcolor(
@@ -167,10 +192,14 @@ class TemperatureSweepData:
                 cmap='magma',
                 shading='nearest',
             )
-            fig.colorbar(c, ax=ax)
+            if not log:
+                barlabel = r'counts $\cdot$ s${}^{-1}$'
+            else:
+                barlabel = r'$log$ counts $\cdot$ s${}^{-1}$'
+            fig.colorbar(c, ax=ax, label=barlabel)
             ax.set_title(r'$p='+str(p)+r'^\circ$, $a='+str(a)+r'^\circ$')
-            ax.set_xlabel(r'$\nu~(\mathrm{cm}^{-1})$')
-            ax.set_ylabel(r'$T$ (K)')
+            ax.set_xlabel(r'$T$ (K)')
+            ax.set_ylabel(r'$\nu~(\mathrm{cm}^{-1})$')
         plt.show()
 
     def check_despike(self, offset_factor=0):
