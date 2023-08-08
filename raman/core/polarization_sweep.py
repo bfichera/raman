@@ -240,7 +240,7 @@ class PolarizationSweepData:
             ax.set_title(r'$a='+str(a)+r'^\circ$')
             ax.set_xlabel(r'$\theta~({}^\circ)$')
             ax.set_ylabel(r'$\nu~(\mathrm{cm}^{-1})$')
-        plt.show()
+        return fig, axd
 
     def check_despike(self, offset_factor=0):
         fig, axd = self._waterfall_plot(

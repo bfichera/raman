@@ -200,7 +200,7 @@ class TemperatureSweepData:
             ax.set_title(r'$p='+str(p)+r'^\circ$, $a='+str(a)+r'^\circ$')
             ax.set_xlabel(r'$T$ (K)')
             ax.set_ylabel(r'$\nu~(\mathrm{cm}^{-1})$')
-        plt.show()
+        return fig, axd
 
     def check_despike(self, offset_factor=0):
         for t, d in self._dict.items():
