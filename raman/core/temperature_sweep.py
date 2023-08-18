@@ -43,10 +43,6 @@ class TemperatureSweepData:
             p_angles_ = []
             a_diff_angles_ = []
             paths_ = []
-#             print(temperatures)
-#             print(p_angles)
-#             print(a_diff_angles)
-#             print(paths)
             for t_, p, a, path in zip(
                 temperatures,
                 p_angles,
@@ -108,6 +104,14 @@ class TemperatureSweepData:
             .select(pl.col('COUNTS/SEC'))
             .to_series()
         )
+
+    def ydata_of(self, temperature, p_angle, a_diff_angle):
+        filt = (
+            (pl.col('P_ANGLE') == p_angle)
+            & (pl.col('A_DIFF_ANGLE') == a_diff_angle)
+            & (pl.col('TEMPERATURE') == temperature)
+        )
+        return self._ydata_of(filt)
 
     def _waterfall_plot(self, offset_factor, cmap=None):
         if cmap is None:

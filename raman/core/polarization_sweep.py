@@ -138,6 +138,13 @@ class PolarizationSweepData:
             .to_series()
         )
 
+    def ydata_of(self, p_angle, a_diff_angle):
+        filt = (
+            (pl.col('P_ANGLE') == p_angle)
+            & (pl.col('A_DIFF_ANGLE') == a_diff_angle)
+        )
+        return self._ydata_of(self._df, filt)
+
     def _waterfall_plot(self, dfs, offset_factor, labels, colors):
         fig, axd = plt.subplot_mosaic(
             [self.a_diff_angles],
